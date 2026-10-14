@@ -28901,7 +28901,7 @@ function loadPlotly() {
   }
   return new Promise(resolve => {
     const script = document.createElement('script');
-    script.src = '/assets/plotly.min.js';
+    script.src = '/ccac-shopper-agent-demo/assets/plotly.min.js';
     script.onload = () => resolve();
     script.onerror = () => {
       console.error('[sample data] could not load /assets/plotly.min.js - charts will not draw');
@@ -43514,21 +43514,21 @@ class ToastComponent {
       case 'success':
         {
           return {
-            icon: '/assets/icons/utility-sprite/svg/symbols.svg#success',
+            icon: '/ccac-shopper-agent-demo/assets/icons/utility-sprite/svg/symbols.svg#success',
             class: `${cssClass} slds-theme_success`
           };
         }
       case 'warning':
         {
           return {
-            icon: '/assets/icons/utility-sprite/svg/symbols.svg#warning',
+            icon: '/ccac-shopper-agent-demo/assets/icons/utility-sprite/svg/symbols.svg#warning',
             class: `${cssClass} slds-theme_warning`
           };
         }
       default:
         {
           return {
-            icon: '/assets/icons/utility-sprite/svg/symbols.svg#error',
+            icon: '/ccac-shopper-agent-demo/assets/icons/utility-sprite/svg/symbols.svg#error',
             class: `${cssClass} slds-theme_error`
           };
         }
@@ -43545,7 +43545,7 @@ class ToastComponent {
     },
     decls: 1,
     vars: 1,
-    consts: [["class", "slds-align_absolute-center ccac-toast", 4, "ngIf"], [1, "slds-align_absolute-center", "ccac-toast"], ["role", "status"], [1, "slds-assistive-text"], ["title", "Description of icon when needed", 1, "slds-icon_container", "slds-icon-utility-error", "slds-m-right_small", "slds-no-flex", "slds-align-top"], ["aria-hidden", "true", 1, "slds-icon", "slds-icon_small"], [1, "slds-notify__content"], [1, "slds-text-heading_small"], [1, "slds-notify__close"], ["title", "Close", 1, "slds-button", "slds-button_icon", "slds-button_icon-inverse", 3, "click"], ["aria-hidden", "true", 1, "slds-button__icon", "slds-button__icon_large"], [0, "xlink", "href", "/assets/icons/utility-sprite/svg/symbols.svg#close"]],
+    consts: [["class", "slds-align_absolute-center ccac-toast", 4, "ngIf"], [1, "slds-align_absolute-center", "ccac-toast"], ["role", "status"], [1, "slds-assistive-text"], ["title", "Description of icon when needed", 1, "slds-icon_container", "slds-icon-utility-error", "slds-m-right_small", "slds-no-flex", "slds-align-top"], ["aria-hidden", "true", 1, "slds-icon", "slds-icon_small"], [1, "slds-notify__content"], [1, "slds-text-heading_small"], [1, "slds-notify__close"], ["title", "Close", 1, "slds-button", "slds-button_icon", "slds-button_icon-inverse", 3, "click"], ["aria-hidden", "true", 1, "slds-button__icon", "slds-button__icon_large"], [0, "xlink", "href", "/ccac-shopper-agent-demo/assets/icons/utility-sprite/svg/symbols.svg#close"]],
     template: function ToastComponent_Template(rf, ctx) {
       if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_2__["ɵɵtemplate"](0, ToastComponent_ngl_toast_0_Template, 16, 5, "ngl-toast", 0);
