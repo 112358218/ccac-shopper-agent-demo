@@ -24844,32 +24844,53 @@ function bootFixture(path) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "ACTIONS_BY_TYPE_COLUMNS": () => (/* binding */ ACTIONS_BY_TYPE_COLUMNS),
+/* harmony export */   "CLICK_THROUGH_COLUMNS": () => (/* binding */ CLICK_THROUGH_COLUMNS),
+/* harmony export */   "FEATURE_USAGE_COLUMNS": () => (/* binding */ FEATURE_USAGE_COLUMNS),
 /* harmony export */   "INTERACTIONS_PER_SESSION_COLUMNS": () => (/* binding */ INTERACTIONS_PER_SESSION_COLUMNS),
 /* harmony export */   "PRODUCT_SEARCH": () => (/* binding */ PRODUCT_SEARCH),
 /* harmony export */   "SESSION_DURATION_COLUMNS": () => (/* binding */ SESSION_DURATION_COLUMNS),
+/* harmony export */   "SESSION_ENTRY_POINT_COLUMNS": () => (/* binding */ SESSION_ENTRY_POINT_COLUMNS),
 /* harmony export */   "SESSION_OUTCOME_COLUMNS": () => (/* binding */ SESSION_OUTCOME_COLUMNS),
+/* harmony export */   "SUBAGENTS_USED_COLUMNS": () => (/* binding */ SUBAGENTS_USED_COLUMNS),
 /* harmony export */   "TOTAL_AGENT_SESSIONS_COLUMNS": () => (/* binding */ TOTAL_AGENT_SESSIONS_COLUMNS),
 /* harmony export */   "UNIQUE_USERS_COLUMNS": () => (/* binding */ UNIQUE_USERS_COLUMNS),
 /* harmony export */   "productSearchesForSiteDay": () => (/* binding */ productSearchesForSiteDay),
 /* harmony export */   "sampleActionsByDate": () => (/* binding */ sampleActionsByDate),
 /* harmony export */   "sampleActionsByType": () => (/* binding */ sampleActionsByType),
+/* harmony export */   "sampleClickThroughByDate": () => (/* binding */ sampleClickThroughByDate),
+/* harmony export */   "sampleFeatureUsage": () => (/* binding */ sampleFeatureUsage),
 /* harmony export */   "sampleInteractionsPerSessionByDate": () => (/* binding */ sampleInteractionsPerSessionByDate),
 /* harmony export */   "sampleSessionDurationByDate": () => (/* binding */ sampleSessionDurationByDate),
+/* harmony export */   "sampleSessionEntryPoints": () => (/* binding */ sampleSessionEntryPoints),
 /* harmony export */   "sampleSessionOutcomes": () => (/* binding */ sampleSessionOutcomes),
+/* harmony export */   "sampleSubagentsUsed": () => (/* binding */ sampleSubagentsUsed),
 /* harmony export */   "sampleTotalAgentSessionsByDate": () => (/* binding */ sampleTotalAgentSessionsByDate),
 /* harmony export */   "sampleUniqueUsersByDate": () => (/* binding */ sampleUniqueUsersByDate)
 /* harmony export */ });
 /* harmony import */ var _sample_data_common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./sample-data-common */ 45253);
 
 // action name -> actions per agent session (roughly)
-const SAMPLE_ACTION_WEIGHTS = [['Product Search', 1.4], ['Product Details', 1.1], ['Add to Cart', 0.35], ['Order Summary / Checkout', 0.15]];
-/* PLACEHOLDER outcome names and weights. They are NOT from the brief (which does not say how an agent session can end)
-   and exist only so the Session Outcome chart has something to draw. Per site and day the counts are split so they add
-   up to Total Agent Sessions (`sessions`, the Overview figure) exactly. */
-const SAMPLE_OUTCOME_WEIGHTS = [['Placeholder Outcome A', 0.4], ['Placeholder Outcome B', 0.3], ['Placeholder Outcome C', 0.2], ['Placeholder Outcome D', 0.1]];
+const SAMPLE_ACTION_WEIGHTS = [['Product Search', 1.4], ['Product Details', 1.1], ['Add to Cart', 0.35], ['Order Summary / Checkout', 0.15],
+// USER-ADDED, unconfirmed (not in the brief). WISMO ("Where Is My Order", the order confirmation / order status
+// action) stays below Add to Cart per site and day (at most 0.115 against at least 0.30 per session) and below
+// Order Summary / Checkout.
+['Site FAQ', 0.3], ['WISMO', 0.1]];
+/* Sample outcome names and weights: each session is counted once, under the furthest step it reached. They are NOT from
+   the brief (which does not say how an agent session can end), so the categories are a sample definition. Per site and
+   day the counts are split so they add up to Total Agent Sessions (`sessions`, the Overview figure) exactly. */
+const SAMPLE_OUTCOME_WEIGHTS = [['Viewed Products', 0.35], ['Searched Only', 0.25], ['Added To Cart', 0.19], ['Left Without Interacting', 0.15], ['Purchased', 0.06]];
+/* PLACEHOLDER entry points (where the shopper was when they opened the agent). Not from the brief: the taxonomy is a
+   sample definition. Per site and day the counts add up to Total Shopper Agent Sessions (`sessions`) exactly. */
+const SAMPLE_ENTRY_POINT_WEIGHTS = [['Home', 0.3], ['Search Results', 0.2], ['Category Page', 0.2], ['Product Page', 0.25], ['Cart', 0.05]];
+/* PLACEHOLDER subagent names -> the action each one performs. Not from the brief (which names no subagents): the set is a
+   sample definition, picked to match the By Action actions where that makes sense. */
+const SAMPLE_SUBAGENTS = [['Product Search', 'Product Search'], ['Product Details', 'Product Details'], ['Site FAQ', 'Site FAQ'], ['Cart', 'Add to Cart'], ['WISMO', 'WISMO']];
+const IMAGE_SEARCH = 'Image Search Sessions';
+const EMBEDDED_PDP_SESSIONS = 'Embedded Product Page Sessions';
+const EMBEDDED_PDP_VIEWS = 'Embedded Product Page Views';
 const PRODUCT_SEARCH = 'Product Search';
 // the actions of the Shopper Activity bar chart, top to bottom as the user listed them
-const BAR_CHART_ACTIONS = [PRODUCT_SEARCH, 'Product Details', 'Add to Cart'];
+const BAR_CHART_ACTIONS = [PRODUCT_SEARCH, 'Product Details', 'Add to Cart', 'Site FAQ', 'WISMO'];
 function actionsForSiteDay(siteId, detail) {
   return SAMPLE_ACTION_WEIGHTS.map(([action, weight]) => {
     const rand = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|${action}`));
@@ -24896,9 +24917,9 @@ function sampleActionsByDate(params) {
   });
   return out;
 }
-/* Total of the actions the Shopper Activity bar chart shows (Product Search, Product Details, Add to Cart), in that
-   order, over the range and sites. The other sample action (Order Summary / Checkout) is not served here but still counts
-   as an interaction. */
+/* Total of the actions the Shopper Activity bar chart shows (Product Search, Product Details, Add to Cart, Site FAQ,
+   WISMO), in that order, over the range and sites. The
+   other sample action (Order Summary / Checkout) is not served here but still counts as an interaction. */
 function sampleActionsByType(params) {
   const totals = new Map();
   sampleActionsByDate(params).forEach(row => totals.set(row.action, (totals.get(row.action) || 0) + row.actions));
@@ -24907,22 +24928,111 @@ function sampleActionsByType(params) {
     actions: totals.get(action)
   }));
 }
+const PRODUCT_DETAILS = 'Product Details';
+function productDetailsForSiteDay(siteId, detail) {
+  return actionsForSiteDay(siteId, detail).find(([action]) => action === PRODUCT_DETAILS)[1];
+}
+/* USER-ADDED, unconfirmed. Click-through = clicks on what the agent shows / items shown. Per site and day clicks are
+   1.05 to 1.25 times the Product Details actions (every product opened was clicked) and 8 to 14% of the items shown,
+   so the range figure is sum(clicks) / sum(itemsShown), not the average of the daily ratios. */
+function clickThroughForSiteDay(siteId, detail) {
+  const rand = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|click-through`));
+  const clicks = Math.round(productDetailsForSiteDay(siteId, detail) * (1.05 + rand() * 0.2));
+  return {
+    clicks,
+    itemsShown: Math.round(clicks / (0.08 + rand() * 0.06))
+  };
+}
+/* USER-ADDED, unconfirmed. Embedded product page: views are 35 to 50% of the Product Details actions (so never above
+   them), each session that opened it opened it 1.2 to 1.5 times on average, and the sessions are a subset of Total
+   Shopper Agent Sessions. */
+function embeddedPdpForSiteDay(siteId, detail) {
+  const rand = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|embedded-pdp`));
+  const views = Math.round(productDetailsForSiteDay(siteId, detail) * (0.35 + rand() * 0.15));
+  return {
+    views,
+    sessions: Math.min(detail.sessions, Math.round(views / (1.2 + rand() * 0.3)))
+  };
+}
+// USER-ADDED, unconfirmed. Image search sessions are 6 to 12% of Total Shopper Agent Sessions.
+function imageSearchSessionsForSiteDay(siteId, detail) {
+  const rand = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|image-search`));
+  return Math.round(detail.sessions * (0.06 + rand() * 0.06));
+}
+function sampleClickThroughByDate(params) {
+  return (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.daysInRange)(params).map(day => {
+    let clicks = 0;
+    let itemsShown = 0;
+    params.siteIds.forEach(siteId => {
+      const site = clickThroughForSiteDay(siteId, (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.generateDay)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.siteById)(siteId), day));
+      clicks += site.clicks;
+      itemsShown += site.itemsShown;
+    });
+    return {
+      date: day.format('YYYY-MM-DD'),
+      clicks,
+      itemsShown
+    };
+  });
+}
+// Image search sessions, embedded product page sessions and views over the range and sites, in that order ([] for no data).
+function sampleFeatureUsage(params) {
+  const totals = [0, 0, 0];
+  if ((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.daysInRange)(params).length === 0 || params.siteIds.length === 0) {
+    return [];
+  }
+  (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.daysInRange)(params).forEach(day => params.siteIds.forEach(siteId => {
+    const detail = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.generateDay)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.siteById)(siteId), day);
+    const pdp = embeddedPdpForSiteDay(siteId, detail);
+    totals[0] += imageSearchSessionsForSiteDay(siteId, detail);
+    totals[1] += pdp.sessions;
+    totals[2] += pdp.views;
+  }));
+  return [IMAGE_SEARCH, EMBEDDED_PDP_SESSIONS, EMBEDDED_PDP_VIEWS].map((feature, i) => ({
+    feature,
+    count: totals[i]
+  }));
+}
 /* Total Agent Sessions: every session of the agent, a session starting as soon as the agent is initiated (the brief).
    The shopping agent's sessions, Total Shopper Agent Sessions (`sessions`, the Overview figure), are a subset of them,
    so each day is 1.3 to 1.5 times that figure and always above it. */
+function totalAgentSessionsForSiteDay(siteId, detail) {
+  const rand = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|total-agent-sessions`));
+  return Math.round(detail.sessions * (1.3 + rand() * 0.2));
+}
 function sampleTotalAgentSessionsByDate(params) {
   return (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.daysInRange)(params).map(day => {
     let sessions = 0;
-    params.siteIds.forEach(siteId => {
-      const detail = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.generateDay)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.siteById)(siteId), day);
-      const rand = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|total-agent-sessions`));
-      sessions += Math.round(detail.sessions * (1.3 + rand() * 0.2));
-    });
+    params.siteIds.forEach(siteId => sessions += totalAgentSessionsForSiteDay(siteId, (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.generateDay)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.siteById)(siteId), day)));
     return {
       date: day.format('YYYY-MM-DD'),
       sessions
     };
   });
+}
+/* USER-ADDED, unconfirmed. Total Agent Sessions that used each subagent over the range and sites ([] for no data). A
+   session can use several subagents, so the bars can add up to more than Total Agent Sessions. Per site and day a
+   subagent's sessions are 55 to 80% of the actions it performs (a session uses it at least once, so never more sessions
+   than actions) and never above that day's Total Agent Sessions. */
+function sampleSubagentsUsed(params) {
+  const totals = SAMPLE_SUBAGENTS.map(() => 0);
+  const days = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.daysInRange)(params);
+  if (days.length === 0 || params.siteIds.length === 0) {
+    return [];
+  }
+  days.forEach(day => params.siteIds.forEach(siteId => {
+    const detail = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.generateDay)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.siteById)(siteId), day);
+    const actions = new Map(actionsForSiteDay(siteId, detail));
+    const agentSessions = totalAgentSessionsForSiteDay(siteId, detail);
+    SAMPLE_SUBAGENTS.forEach(([subagent, action], i) => {
+      const rand = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|subagent|${subagent}`));
+      totals[i] += Math.min(agentSessions, Math.round(actions.get(action) * (0.55 + rand() * 0.25)));
+    });
+  }));
+  return SAMPLE_SUBAGENTS.map(([subagent], i) => ({
+    subagent,
+    sessions: totals[i]
+  }));
 }
 /* USER-ADDED, unconfirmed. Placeholder figure (a share of that day's Total Agent Sessions, so never above it): the
    brief does not say how a unique user is identified, and the sample does not pretend to. */
@@ -24978,9 +25088,9 @@ function sampleSessionDurationByDate(params) {
     };
   });
 }
-// splits a site-day's sessions over the outcomes (largest remainder, so the parts add up to `sessions` exactly)
-function outcomesForSiteDay(siteId, detail) {
-  const weights = SAMPLE_OUTCOME_WEIGHTS.map(([outcome, weight]) => weight * (0.85 + (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|${outcome}`))() * 0.3));
+// splits a site-day's sessions over the named parts (largest remainder, so the parts add up to `sessions` exactly)
+function splitSessions(siteId, detail, parts) {
+  const weights = parts.map(([name, weight]) => weight * (0.85 + (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|${name}`))() * 0.3));
   const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
   const exact = weights.map(weight => detail.sessions * weight / totalWeight);
   const counts = exact.map(Math.floor);
@@ -24992,7 +25102,23 @@ function outcomesForSiteDay(siteId, detail) {
   for (let k = 0; k < left; k++) {
     counts[byFraction[k].i]++;
   }
-  return SAMPLE_OUTCOME_WEIGHTS.map(([outcome], i) => [outcome, counts[i]]);
+  return parts.map(([name], i) => [name, counts[i]]);
+}
+const outcomesForSiteDay = (siteId, detail) => splitSessions(siteId, detail, SAMPLE_OUTCOME_WEIGHTS);
+/* USER-ADDED, unconfirmed. The entry point names are a placeholder taxonomy; the rows add up to Total Shopper Agent
+   Sessions over the range. */
+function sampleSessionEntryPoints(params) {
+  const totals = new Map();
+  (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.daysInRange)(params).forEach(day => params.siteIds.forEach(siteId => {
+    const detail = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.generateDay)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.siteById)(siteId), day);
+    splitSessions(siteId, detail, SAMPLE_ENTRY_POINT_WEIGHTS).forEach(([entryPoint, count]) => totals.set(entryPoint, (totals.get(entryPoint) || 0) + count));
+  }));
+  const out = [];
+  totals.forEach((sessions, entryPoint) => out.push({
+    entryPoint,
+    sessions
+  }));
+  return out;
 }
 /* USER-ADDED, unconfirmed. Outcome names are placeholders (see SAMPLE_OUTCOME_WEIGHTS); the rows add up to Total Agent
    Sessions over the range. */
@@ -25012,6 +25138,10 @@ const UNIQUE_USERS_COLUMNS = ['date', 'uniqueUsers'];
 const INTERACTIONS_PER_SESSION_COLUMNS = ['date', 'interactions', 'agentSessions'];
 const SESSION_DURATION_COLUMNS = ['date', 'durationMs', 'agentSessions'];
 const SESSION_OUTCOME_COLUMNS = ['outcome', 'sessions'];
+const SESSION_ENTRY_POINT_COLUMNS = ['entryPoint', 'sessions'];
+const CLICK_THROUGH_COLUMNS = ['date', 'clicks', 'itemsShown'];
+const SUBAGENTS_USED_COLUMNS = ['subagent', 'sessions'];
+const FEATURE_USAGE_COLUMNS = ['feature', 'count'];
 
 /***/ }),
 
@@ -30980,6 +31110,22 @@ const HANDLERS = {
   'session-outcomes': (params, endpoint) => endpoint.length === 1 ? {
     rows: (0,_sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.sampleSessionOutcomes)(params),
     columns: _sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.SESSION_OUTCOME_COLUMNS
+  } : undefined,
+  'session-entry-points': (params, endpoint) => endpoint.length === 1 ? {
+    rows: (0,_sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.sampleSessionEntryPoints)(params),
+    columns: _sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.SESSION_ENTRY_POINT_COLUMNS
+  } : undefined,
+  'click-through-by-date': (params, endpoint) => endpoint.length === 1 ? {
+    rows: (0,_sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.sampleClickThroughByDate)(params),
+    columns: _sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.CLICK_THROUGH_COLUMNS
+  } : undefined,
+  'feature-usage': (params, endpoint) => endpoint.length === 1 ? {
+    rows: (0,_sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.sampleFeatureUsage)(params),
+    columns: _sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.FEATURE_USAGE_COLUMNS
+  } : undefined,
+  'subagents-used': (params, endpoint) => endpoint.length === 1 ? {
+    rows: (0,_sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.sampleSubagentsUsed)(params),
+    columns: _sample_data_activity__WEBPACK_IMPORTED_MODULE_1__.SUBAGENTS_USED_COLUMNS
   } : undefined,
   'orders-by-date': (params, endpoint) => endpoint.length === 1 ? {
     rows: (0,_sample_data_orders__WEBPACK_IMPORTED_MODULE_2__.sampleOrdersByDate)(params),
@@ -44186,6 +44332,10 @@ const TOTAL_AGENT_SESSIONS_PATH = 'shopper-agent/total-agent-sessions-by-date';
 const ACTIONS_BY_TYPE_PATH = 'shopper-agent/actions-by-type';
 const INTERACTIONS_PER_SESSION_PATH = 'shopper-agent/interactions-per-session-by-date';
 const SESSION_DURATION_PATH = 'shopper-agent/session-duration-by-date';
+const CLICK_THROUGH_PATH = 'shopper-agent/click-through-by-date';
+const ENTRY_POINTS_PATH = 'shopper-agent/session-entry-points';
+const FEATURE_USAGE_PATH = 'shopper-agent/feature-usage';
+const SUBAGENTS_PATH = 'shopper-agent/subagents-used';
 const SESSION_OUTCOMES_PATH = 'shopper-agent/session-outcomes';
 const DEVICE_PATH = 'shopper-agent/sessions-by-device-type';
 const SITES_ONLY = ['sites'];
@@ -44205,12 +44355,19 @@ const TOOLTIPS = {
     placement: 'right'
   },
   // the brief's wording: "What are shoppers doing with the agent." and, for Add to Cart, "Add-to-cart actions taken in the agent."
-  actions: 'Shopper Activity By Action: what shoppers are doing with the agent. Each bar is one kind of agent action ' + '(Product Search, Product Details, Add to Cart) and its length is how many times that action was taken in the ' + 'selected date range and sites; Add to Cart is the add-to-cart actions taken in the agent. (Sample definition ' + 'for the prototype.)',
+  actions: 'Shopper Activity By Action: what shoppers are doing with the agent. Each bar is one kind of agent action ' + '(Product Search, Product Details, Add to Cart, Site FAQ, WISMO) and its length is how ' + 'many times that action was taken in the selected date range and sites; Add to Cart is the add-to-cart actions ' + `taken in the agent. Site FAQ and WISMO are USER-ADDED, not in the PM brief: what counts ` + 'as each of them is ASSUMED - PM to confirm. WISMO is "Where Is My Order", the order confirmation / order status action.' + ' (Sample definition for the prototype.)',
   totalAgentSessions: {
     text: 'Total Agent Sessions: all agent sessions in the selected date range and sites. A session starts as soon as ' + 'the agent is initiated (MessagingSessionId, BotSessionID or ConversationID identify it). Total Shopper ' + 'Agent Sessions is the shopping agent subset of these. The line shows the count per day; the figures above ' + 'it are the sum and the average per day. (Sample definition for the prototype.)',
     placement: 'right'
   },
-  sessionOutcome: `Session Outcome: how agent sessions ended. Each bar is one outcome and its height is the number of ` + `sessions that ended that way in the selected date range and sites. Every outcome the API reports is shown. ` + `${_shopper_agent_unique_users__WEBPACK_IMPORTED_MODULE_3__.USER_ADDED_NOTE} The outcome categories are not decided; the names in the sample are placeholders, not from ` + `the brief. (Sample definition for the prototype.)`
+  clickThrough: {
+    text: `Click Through Rate: clicks on what the agent shows (products and links it surfaced) divided by the items ` + `it showed, in the selected date range and sites. The line is the rate per day; the figure above it is ` + `total clicks divided by total items shown. ${_shopper_agent_unique_users__WEBPACK_IMPORTED_MODULE_3__.USER_ADDED_NOTE} What counts as a click and as an item shown ` + `is not decided. (Sample definition for the prototype.)`,
+    placement: 'right'
+  },
+  entryPoint: `Click Behavior, Session Entry Point: where the shopper was when they opened the agent. Each bar is one ` + `entry point and its length is the number of Total Shopper Agent Sessions that started there in the selected date ` + `range and sites. Every entry point the API reports is shown. ${_shopper_agent_unique_users__WEBPACK_IMPORTED_MODULE_3__.USER_ADDED_NOTE} The entry point categories are ` + `not decided; the names in the sample are placeholders, not from the brief. (Sample definition for the ` + `prototype.)`,
+  featureUsage: `Click Behavior, Image Search and Embedded Product Page: how many sessions used image search, how many ` + `sessions opened the product detail page embedded inside the agent, and how many times it was opened, in the ` + `selected date range and sites. ${_shopper_agent_unique_users__WEBPACK_IMPORTED_MODULE_3__.USER_ADDED_NOTE} What counts as image search and as opening the embedded ` + `product page is not decided, and image search click-through is not shown. (Sample definition for the ` + `prototype.)`,
+  subagents: `Subagents Used: how many Total Agent Sessions used each subagent in the selected date range and sites. Each ` + `bar is one subagent and its length is the number of sessions that used it. A session can use several subagents, ` + `so the bars can add up to more than Total Agent Sessions. Every subagent the API reports is shown. ${_shopper_agent_unique_users__WEBPACK_IMPORTED_MODULE_3__.USER_ADDED_NOTE} ` + `The subagent names are not in the PM brief and what a subagent is is not decided; the names in the sample are ` + `placeholders. (Sample definition for the prototype.)`,
+  sessionOutcome: `Session Outcome: how agent sessions ended. Each bar is one outcome and its height is the number of ` + `sessions that ended that way in the selected date range and sites. Every outcome the API reports is shown. ` + `${_shopper_agent_unique_users__WEBPACK_IMPORTED_MODULE_3__.USER_ADDED_NOTE} The outcome categories are not decided; the sample counts each session once under the ` + `furthest step it reached (Purchased, Added To Cart, Viewed Products, Searched Only, Left Without Interacting). These ` + `names are a sample definition, not from the brief. (Sample definition for the prototype.)`
 };
 // one metric tile of the multi-display chart (a fresh config on every call: chartConfig fills in its base config)
 const tile = (title, format, path, averageAttrs, transform, tooltip) => _shared_charts_multi_display_line_chart_multi_display_line_chart_component__WEBPACK_IMPORTED_MODULE_0__.MultiDisplayLineChartComponent.chartConfig({}, title, format, path, true, averageAttrs, transform, tooltip, 20, SITES_ONLY);
@@ -44228,7 +44385,12 @@ class ShopperAgentActivityComponent {
     tile('average session duration', 'duration', SESSION_DURATION_PATH, {
       numerator: 'durationMs',
       denominator: 'agentSessions'
-    }, rows => (0,_shopper_agent_transforms__WEBPACK_IMPORTED_MODULE_1__.sessionDurationLineSeries)(rows), TOOLTIPS.sessionDuration)]
+    }, rows => (0,_shopper_agent_transforms__WEBPACK_IMPORTED_MODULE_1__.sessionDurationLineSeries)(rows), TOOLTIPS.sessionDuration),
+    // percentages: the figure for the range is total clicks / total items shown, not the average of the daily rates
+    tile('click through rate', 'percent', CLICK_THROUGH_PATH, {
+      numerator: 'clicks',
+      denominator: 'itemsShown'
+    }, rows => (0,_shopper_agent_transforms__WEBPACK_IMPORTED_MODULE_1__.clickThroughLineSeries)(rows), TOOLTIPS.clickThrough)]
   };
   actionsConfig = {
     title: 'shopper activity by action',
@@ -44240,6 +44402,39 @@ class ShopperAgentActivityComponent {
     URLSection: ACTIONS_BY_TYPE_PATH,
     additionalQueryParams: SITES_ONLY,
     transformData: rows => (0,_shopper_agent_transforms__WEBPACK_IMPORTED_MODULE_1__.actionBarSeries)(rows)
+  };
+  entryPointConfig = {
+    title: 'click behavior: session entry point',
+    tooltip: {
+      text: TOOLTIPS.entryPoint
+    },
+    format: 'integer',
+    yValues: 'entryPoints',
+    URLSection: ENTRY_POINTS_PATH,
+    additionalQueryParams: SITES_ONLY,
+    transformData: rows => (0,_shopper_agent_transforms__WEBPACK_IMPORTED_MODULE_1__.entryPointBarSeries)(rows)
+  };
+  featureUsageConfig = {
+    title: 'click behavior: image search and embedded product page',
+    tooltip: {
+      text: TOOLTIPS.featureUsage
+    },
+    format: 'integer',
+    yValues: 'features',
+    URLSection: FEATURE_USAGE_PATH,
+    additionalQueryParams: SITES_ONLY,
+    transformData: rows => (0,_shopper_agent_transforms__WEBPACK_IMPORTED_MODULE_1__.featureUsageBarSeries)(rows)
+  };
+  subagentsConfig = {
+    title: 'subagents used',
+    tooltip: {
+      text: TOOLTIPS.subagents
+    },
+    format: 'integer',
+    yValues: 'subagents',
+    URLSection: SUBAGENTS_PATH,
+    additionalQueryParams: SITES_ONLY,
+    transformData: rows => (0,_shopper_agent_transforms__WEBPACK_IMPORTED_MODULE_1__.subagentBarSeries)(rows)
   };
   outcomesConfig = {
     title: 'session outcome',
@@ -44270,9 +44465,9 @@ class ShopperAgentActivityComponent {
   static ɵcmp = /*@__PURE__*/_angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵdefineComponent"]({
     type: ShopperAgentActivityComponent,
     selectors: [["app-shopper-agent-activity"]],
-    decls: 13,
-    vars: 4,
-    consts: [[1, "shopper-agent-activity", "slds-grid", "slds-wrap", "tab-body"], [1, "slds-col", "slds-size--1-of-1"], ["data-automation-id", "shopper-agent-activity-chart", 1, "slds-m-around--small", "data-cell"], [3, "configs"], ["data-automation-id", "shopper-agent-actions-chart", 1, "slds-m-around--small", "data-cell"], [3, "config"], [1, "slds-col", "slds-size--1-of-1", "slds-medium-size--1-of-2"], ["data-automation-id", "shopper-agent-session-outcome-chart", 1, "slds-m-around--small", "data-cell"], ["data-automation-id", "shopper-agent-device-chart", 1, "slds-m-around--small", "data-cell"]],
+    decls: 22,
+    vars: 7,
+    consts: [[1, "shopper-agent-activity", "slds-grid", "slds-wrap", "tab-body"], [1, "slds-col", "slds-size--1-of-1"], ["data-automation-id", "shopper-agent-activity-chart", 1, "slds-m-around--small", "data-cell"], [3, "configs"], ["data-automation-id", "shopper-agent-actions-chart", 1, "slds-m-around--small", "data-cell"], [3, "config"], [1, "slds-col", "slds-size--1-of-1", "slds-medium-size--1-of-2"], ["data-automation-id", "shopper-agent-session-outcome-chart", 1, "slds-m-around--small", "data-cell"], ["data-automation-id", "shopper-agent-subagents-chart", 1, "slds-m-around--small", "data-cell"], ["data-automation-id", "shopper-agent-entry-point-chart", 1, "slds-m-around--small", "data-cell"], ["data-automation-id", "shopper-agent-feature-usage-chart", 1, "slds-m-around--small", "data-cell"], ["data-automation-id", "shopper-agent-device-chart", 1, "slds-m-around--small", "data-cell"]],
     template: function ShopperAgentActivityComponent_Template(rf, ctx) {
       if (rf & 1) {
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](0, "div", 0)(1, "div", 1)(2, "div", 2);
@@ -44286,6 +44481,15 @@ class ShopperAgentActivityComponent {
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]()();
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](10, "div", 6)(11, "div", 8);
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelement"](12, "app-bar-chart", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]()();
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](13, "div", 6)(14, "div", 9);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelement"](15, "app-bar-chart", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]()();
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](16, "div", 6)(17, "div", 10);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelement"](18, "app-bar-chart", 5);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]()();
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementStart"](19, "div", 6)(20, "div", 11);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelement"](21, "app-bar-chart", 5);
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵelementEnd"]()()();
       }
       if (rf & 2) {
@@ -44295,6 +44499,12 @@ class ShopperAgentActivityComponent {
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("config", ctx.actionsConfig);
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](3);
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("config", ctx.outcomesConfig);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("config", ctx.subagentsConfig);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("config", ctx.entryPointConfig);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](3);
+        _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("config", ctx.featureUsageConfig);
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵadvance"](3);
         _angular_core__WEBPACK_IMPORTED_MODULE_5__["ɵɵproperty"]("config", ctx.deviceConfig);
       }
@@ -44372,7 +44582,7 @@ class ShopperAgentOrdersRevenueComponent {
         denominator: 'agentSessions'
       }, rows => (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_1__.agentSessionConversionSeries)(rows), ORDERS_TOOLTIPS.conversion), tile({
         showCents: true
-      }, 'agent-influenced average order value', 'currency', {
+      }, 'agent influenced average order value', 'currency', {
         numerator: 'influencedRevenue',
         denominator: 'ordersInfluenced'
       }, rows => (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_1__.aovSeries)(rows), ORDERS_TOOLTIPS.aov)]
@@ -45690,21 +45900,27 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "actionBarSeries": () => (/* binding */ actionBarSeries),
 /* harmony export */   "agentSessionsLineSeries": () => (/* binding */ agentSessionsLineSeries),
+/* harmony export */   "clickThroughLineSeries": () => (/* binding */ clickThroughLineSeries),
 /* harmony export */   "deviceSeries": () => (/* binding */ deviceSeries),
+/* harmony export */   "entryPointBarSeries": () => (/* binding */ entryPointBarSeries),
+/* harmony export */   "featureUsageBarSeries": () => (/* binding */ featureUsageBarSeries),
 /* harmony export */   "interactionsPerSessionLineSeries": () => (/* binding */ interactionsPerSessionLineSeries),
 /* harmony export */   "interactionsPerSessionSparkSeries": () => (/* binding */ interactionsPerSessionSparkSeries),
 /* harmony export */   "outcomeBarSeries": () => (/* binding */ outcomeBarSeries),
 /* harmony export */   "searchTrendSeries": () => (/* binding */ searchTrendSeries),
 /* harmony export */   "sessionDurationLineSeries": () => (/* binding */ sessionDurationLineSeries),
 /* harmony export */   "sessionsSeries": () => (/* binding */ sessionsSeries),
+/* harmony export */   "subagentBarSeries": () => (/* binding */ subagentBarSeries),
 /* harmony export */   "uniqueUsersLineSeries": () => (/* binding */ uniqueUsersLineSeries),
 /* harmony export */   "uniqueUsersSparkSeries": () => (/* binding */ uniqueUsersSparkSeries)
 /* harmony export */ });
 /* harmony import */ var _shared_utils_date_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../shared/utils/date-utils */ 54364);
-/* harmony import */ var _shopper_agent_orders__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shopper-agent.orders */ 62682);
+/* harmony import */ var _shopper_agent_formulas__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./shopper-agent.formulas */ 67595);
+/* harmony import */ var _shopper_agent_orders__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./shopper-agent.orders */ 62682);
 /* Pure helpers that reshape Shopper Agent API rows into what the shared charts expect.
    Every transform returns an "empty" result for empty input so the charts show "No data":
    line/bar charts check values.length, spark charts check data.length (so they get []). */
+
 
 
 /* Line chart data for daily sessions over time. */
@@ -45740,7 +45956,7 @@ function actionBarSeries(rows) {
 /* Total Agent Sessions for the multi-display line chart: sessionsSeries, but with emptySeries() for no data (a tile
    checks data.length, the main chart data.main.values.length). */
 function agentSessionsLineSeries(rows) {
-  return !rows || rows.length === 0 ? (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_1__.emptySeries)() : sessionsSeries(rows);
+  return !rows || rows.length === 0 ? (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_2__.emptySeries)() : sessionsSeries(rows);
 }
 // the spark series above keep ISO dates; the multi-display chart labels days like its other metrics and needs
 // emptySeries() for no data (a tile checks data.length, the main chart data.main.values.length)
@@ -45748,7 +45964,7 @@ function lineSeries(series, extraKeys = []) {
   return series.dates ? {
     ...series,
     dates: series.dates.map(date => _shared_utils_date_utils__WEBPACK_IMPORTED_MODULE_0__.format(date, _shared_utils_date_utils__WEBPACK_IMPORTED_MODULE_0__.SHORT_DATE_FORMAT))
-  } : (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_1__.emptySeries)(extraKeys);
+  } : (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_2__.emptySeries)(extraKeys);
 }
 function uniqueUsersLineSeries(rows) {
   return lineSeries(uniqueUsersSparkSeries(rows));
@@ -45763,6 +45979,44 @@ function outcomeBarSeries(rows) {
   return {
     outcomes: rows.map(row => row.outcome),
     values: rows.map(row => row.sessions)
+  };
+}
+/* Subagents Used (user-added, unconfirmed). Nothing here knows the subagent names: one bar per returned subagent. */
+function subagentBarSeries(rows) {
+  rows = rows || [];
+  return {
+    subagents: rows.map(row => row.subagent),
+    values: rows.map(row => row.sessions)
+  };
+}
+/* Click Behavior (user-added, unconfirmed). Nothing here knows the entry point or feature names: one bar per returned
+   row. */
+function entryPointBarSeries(rows) {
+  rows = rows || [];
+  return {
+    entryPoints: rows.map(row => row.entryPoint),
+    values: rows.map(row => row.sessions)
+  };
+}
+function featureUsageBarSeries(rows) {
+  rows = rows || [];
+  return {
+    features: rows.map(row => row.feature),
+    values: rows.map(row => row.count)
+  };
+}
+/* Click-Through Rate for the multi-display line chart. The daily value is clicks / items shown as a percentage (null
+   on a day with nothing shown, never 0 or NaN); the counts are kept next to it because the figure for the range is
+   sum(clicks) / sum(itemsShown), not the average of the daily rates. */
+function clickThroughLineSeries(rows) {
+  if (!rows || rows.length === 0) {
+    return (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_2__.emptySeries)(['clicks', 'itemsShown']);
+  }
+  return {
+    dates: rows.map(row => _shared_utils_date_utils__WEBPACK_IMPORTED_MODULE_0__.format(row.date, _shared_utils_date_utils__WEBPACK_IMPORTED_MODULE_0__.SHORT_DATE_FORMAT)),
+    values: rows.map(row => (0,_shopper_agent_formulas__WEBPACK_IMPORTED_MODULE_1__.percentOfTotal)(row.clicks, row.itemsShown)),
+    clicks: rows.map(row => row.clicks),
+    itemsShown: rows.map(row => row.itemsShown)
   };
 }
 /* Unique Users (user-added, unconfirmed), as a spark tile ([] when empty). */
@@ -45798,7 +46052,7 @@ function interactionsPerSessionSparkSeries(rows) {
    of the daily averages (see the average piece). The chart shows it as h:m:s (format 'duration'). */
 function sessionDurationLineSeries(rows) {
   if (!rows || rows.length === 0) {
-    return (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_1__.emptySeries)(['durationMs', 'agentSessions']);
+    return (0,_shopper_agent_orders__WEBPACK_IMPORTED_MODULE_2__.emptySeries)(['durationMs', 'agentSessions']);
   }
   return {
     dates: rows.map(row => _shared_utils_date_utils__WEBPACK_IMPORTED_MODULE_0__.format(row.date, _shared_utils_date_utils__WEBPACK_IMPORTED_MODULE_0__.SHORT_DATE_FORMAT)),
