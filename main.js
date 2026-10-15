@@ -24871,10 +24871,11 @@ __webpack_require__.r(__webpack_exports__);
 
 // action name -> actions per agent session (roughly)
 const SAMPLE_ACTION_WEIGHTS = [['Product Search', 1.4], ['Product Details', 1.1], ['Add to Cart', 0.35], ['Order Summary / Checkout', 0.15],
-// USER-ADDED, unconfirmed (not in the brief). WISMO ("Where Is My Order", the order confirmation / order status
-// action) stays below Add to Cart per site and day (at most 0.115 against at least 0.30 per session) and below
-// Order Summary / Checkout.
-['Site FAQ', 0.3], ['WISMO', 0.1]];
+// USER-ADDED, unconfirmed (not in the brief). WISMO ("Where Is My Order", an order status lookup), Order Confirmation
+// and Remove Cart stay below Add to Cart per site and day (at most 0.115 / 0.101 / 0.081 against at least 0.30 per
+// session); WISMO and Order Confirmation also stay below Order Summary / Checkout (at least 0.1275). The bar chart sorts
+// by size, so the weights keep the totals in the order the bars are listed (WISMO > Order Confirmation > Remove Cart).
+['Site FAQ', 0.3], ['WISMO', 0.1], ['Order Confirmation', 0.088], ['Remove Cart', 0.07]];
 /* Sample outcome names and weights: each session is counted once, under the furthest step it reached. They are NOT from
    the brief (which does not say how an agent session can end), so the categories are a sample definition. Per site and
    day the counts are split so they add up to Total Agent Sessions (`sessions`, the Overview figure) exactly. */
@@ -24890,7 +24891,7 @@ const EMBEDDED_PDP_SESSIONS = 'Embedded Product Page Sessions';
 const EMBEDDED_PDP_VIEWS = 'Embedded Product Page Views';
 const PRODUCT_SEARCH = 'Product Search';
 // the actions of the Shopper Activity bar chart, top to bottom as the user listed them
-const BAR_CHART_ACTIONS = [PRODUCT_SEARCH, 'Product Details', 'Add to Cart', 'Site FAQ', 'WISMO'];
+const BAR_CHART_ACTIONS = [PRODUCT_SEARCH, 'Product Details', 'Add to Cart', 'Site FAQ', 'WISMO', 'Order Confirmation', 'Remove Cart'];
 function actionsForSiteDay(siteId, detail) {
   return SAMPLE_ACTION_WEIGHTS.map(([action, weight]) => {
     const rand = (0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.seededRandom)((0,_sample_data_common__WEBPACK_IMPORTED_MODULE_0__.hashString)(`${siteId}|${detail.date}|${action}`));
@@ -24918,7 +24919,7 @@ function sampleActionsByDate(params) {
   return out;
 }
 /* Total of the actions the Shopper Activity bar chart shows (Product Search, Product Details, Add to Cart, Site FAQ,
-   WISMO), in that order, over the range and sites. The
+   WISMO, Order Confirmation, Remove Cart), in that order, over the range and sites. The
    other sample action (Order Summary / Checkout) is not served here but still counts as an interaction. */
 function sampleActionsByType(params) {
   const totals = new Map();
@@ -44355,7 +44356,7 @@ const TOOLTIPS = {
     placement: 'right'
   },
   // the brief's wording: "What are shoppers doing with the agent." and, for Add to Cart, "Add-to-cart actions taken in the agent."
-  actions: 'Shopper Activity By Action: what shoppers are doing with the agent. Each bar is one kind of agent action ' + '(Product Search, Product Details, Add to Cart, Site FAQ, WISMO) and its length is how ' + 'many times that action was taken in the selected date range and sites; Add to Cart is the add-to-cart actions ' + `taken in the agent. Site FAQ and WISMO are USER-ADDED, not in the PM brief: what counts ` + 'as each of them is ASSUMED - PM to confirm. WISMO is "Where Is My Order", the order confirmation / order status action.' + ' (Sample definition for the prototype.)',
+  actions: 'Shopper Activity By Action: what shoppers are doing with the agent. Each bar is one kind of agent action ' + '(Product Search, Product Details, Add to Cart, Site FAQ, WISMO, Order Confirmation, Remove Cart) and its length is how ' + 'many times that action was taken in the selected date range and sites; Add to Cart is the add-to-cart actions ' + `taken in the agent. Site FAQ, WISMO, Order Confirmation and Remove Cart are USER-ADDED, not in the PM brief: what counts ` + 'as each of them is ASSUMED - PM to confirm. WISMO is "Where Is My Order", an order status lookup; Order Confirmation is the ' + 'confirmation of a placed order. How the two differ is not decided.' + ' (Sample definition for the prototype.)',
   totalAgentSessions: {
     text: 'Total Agent Sessions: all agent sessions in the selected date range and sites. A session starts as soon as ' + 'the agent is initiated (MessagingSessionId, BotSessionID or ConversationID identify it). Total Shopper ' + 'Agent Sessions is the shopping agent subset of these. The line shows the count per day; the figures above ' + 'it are the sum and the average per day. (Sample definition for the prototype.)',
     placement: 'right'
